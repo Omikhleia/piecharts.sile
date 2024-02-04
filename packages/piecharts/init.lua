@@ -29,10 +29,6 @@ end
 local package = pl.class(base)
 package._name = "piechart"
 
-function package:init ()
-  self:loadPackage("textcase")
-end
-
 function package:registerCommands ()
 
   self:registerCommand("piechart", function (options, _)
