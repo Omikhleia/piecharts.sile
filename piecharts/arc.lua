@@ -37,7 +37,7 @@ local function arcBezierCurve (x, y, width, height, startAngle, arcAngle)
   local d2x = -a * sin2
   local d2y = -b * cos2
 
-  -- Alpha "constant" 
+  -- Alpha "constant"
   local aux = math.tan(arcAngle / 2)
   local alpha = math.sin(arcAngle) * (math.sqrt(4 + 3 * aux * aux) - 1.0) / 3.0
 
@@ -71,7 +71,7 @@ local function arc (x, y, width, height, startAngle, arcAngle)
     curves[#curves + 1] = {bezier[3], bezier[4], bezier[5], bezier[6], bezier[7], bezier[8]}
     currentStartAngle = currentStartAngle + actualArcAngle;
   end
-  -- curves[#curves+1] = { x, y }
+  -- curves[#curves+1] = { x, y } -- Nope, just the arc
   return curves
 end
 

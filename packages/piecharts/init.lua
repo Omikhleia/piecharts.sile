@@ -15,9 +15,9 @@ local function scaleContent(content, maxwidth, maxheight)
   local fontTargetSize
   local box
   SILE.call("font", { size = 10 }, function ()
-    local box = SILE.typesetter:makeHbox(content)
-    local rh = (box.height:tonumber() + box.depth:tonumber()) / maxheight -- height ratio to maxheight
-    local rw = box.width:tonumber() / maxwidth -- width ratio to maxwidth
+    local tmp = SILE.typesetter:makeHbox(content)
+    local rh = (tmp.height:tonumber() + tmp.depth:tonumber()) / maxheight -- height ratio to maxheight
+    local rw = tmp.width:tonumber() / maxwidth -- width ratio to maxwidth
     fontTargetSize = 10 / math.max(rh, rw)
   end)
   SILE.call("font", { size = fontTargetSize }, function ()
@@ -35,7 +35,7 @@ end
 
 function package:registerCommands ()
 
-  self:registerCommand("piechart", function (options, content)
+  self:registerCommand("piechart", function (options, _)
     local csvfile = SU.required(options, "csvfile", "piechart")
     local data = readCsvFile(csvfile)
     local column = SU.cast("integer", options.column or 2)
@@ -49,7 +49,6 @@ function package:registerCommands ()
     local gradient = SU.boolean(options.gradient or false)
     local cutoff = SU.cast("number", options.cutoff or 0)
     local graphHeight = SU.cast("measurement", options.height or "4em"):tonumber()
-    local gradient = SU.boolean(options.gradient or false)
 
     local pieDiameter = (standout and graphHeight * (1 - offsetRatio) or graphHeight)
     local pieDimen = graphHeight
@@ -141,7 +140,6 @@ function package:registerCommands ()
     local start = math.pi / 7 -- arbitrary start angle
     local paths = {}
     for row, v in ipairs(data) do
-      local hue = H
       local fillcolor = colorFn(H, S, L, row)
       local value = tonumber(v[column]) or 0
 
@@ -161,8 +159,8 @@ function package:registerCommands ()
     -- first construct the box at current font size and compute the total height
     local legends = {}
     local maxLabelHeight = 0
-    for row, v in ipairs(data) do
-      local value = tonumber(v[column]) or 0
+    for _, entry in ipairs(data) do
+      local value = tonumber(entry[column]) or 0
       if percentage then
         local nnsp = luautf8.char(0x202f)
         local vp = value / totalValue * 100
@@ -178,7 +176,7 @@ function package:registerCommands ()
           value = string.format("%." .. decimals .. "f", value)
         end
       end
-      legends[#legends+1] = v[1] .. " (" .. value .. ")"
+      legends[#legends+1] = entry[1] .. " (" .. value .. ")"
       local shaped = SILE.typesetter:makeHbox({ legends[#legends] })
       maxLabelHeight = SU.max(maxLabelHeight, shaped.height:tonumber())
     end
@@ -189,8 +187,7 @@ function package:registerCommands ()
     local fontSz = SILE.settings:get("font.size")
     local labelRadius = 0.5 * maxLabelHeight * labelFontRatio
     local maxLabelWidth = 0
-    for i, v in ipairs(legends) do
-      local label = legends[i]
+    for i, label in ipairs(legends) do
       -- reshape the label at the new font size, slighty smaller for better effect
       SILE.call("font", { size = 0.9 * fontSz * labelFontRatio }, function ()
         label = SILE.typesetter:makeHbox({ label })
@@ -211,8 +208,8 @@ function package:registerCommands ()
       width = SILE.length(graphWidth),
       height = SILE.length(graphHeight),
       depth = SILE.length(),
-      outputYourself = function (self, typesetter, line)
-        local outputWidth = SU.rationWidth(self.width, self.width, line.ratio)
+      outputYourself = function (box, typesetter, line)
+        local outputWidth = SU.rationWidth(box.width, box.width, line.ratio)
         local saveX = typesetter.frame.state.cursorX
         local saveY = typesetter.frame.state.cursorY
 
@@ -238,10 +235,6 @@ function package:registerCommands ()
         for i, legend in ipairs(legends) do
           local ipos = #legends - i
           -- small circle
-          local hue = 0.01 -- 1 / 3
-          local fillcolor = colorFn(hue, 0.4, 0.5, i)
-          local rgb = hslToRgb(hue, 0.4, 0.5)
-
           local lx = legendX + labelRadius + 0.05 * pieDimen
           local ly = legendY - ipos * maxLabelHeight * labelFontRatio * labelBs
           SILE.outputter:drawSVG(
