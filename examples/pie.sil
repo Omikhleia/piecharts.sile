@@ -1,0 +1,20 @@
+\begin[papersize=a6]{document}
+\nofolios
+\neverindent
+\use[module=packages.piecharts]
+
+\center{\strong{SILE cooks delicious pies!}}
+
+\medskip
+
+\begin{center}
+\piechart[csvfile=examples/data-pie.csv, standout=true, height=8em] %
+\piechart[csvfile=examples/data-pie.csv, column=3, percentage=true]
+
+\piechart[csvfile=examples/data-pie.csv, standout=true, height=6em, cutoff=0.07, percentage=true, gradient=true] %
+\piechart[csvfile=examples/data-pie.csv, column=4, gradient=true]
+
+\piechart[csvfile=examples/data-pie.csv, column=5, percentage=true, decimals=1]
+\end{center}
+
+\end{document}
