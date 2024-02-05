@@ -3,6 +3,7 @@
 -- @copyright License: MIT (c) 2024 Omikhleia, Didier Willis
 --
 local readCsvFile = require("piecharts.csv").readCsvFile
+local readCsvString = require("piecharts.csv").readCsvString
 local hslToRgb = require("piecharts.color").hslToRgb
 local rgbToHsl = require("piecharts.color").rgbToHsl
 local pieSector = require("piecharts.drawing").pieSector
@@ -32,8 +33,14 @@ package._name = "piechart"
 function package:registerCommands ()
 
   self:registerCommand("piechart", function (options, _)
-    local csvfile = SU.required(options, "csvfile", "piechart")
-    local data = readCsvFile(csvfile)
+    local data
+    if options._parsed_table_ and type(options._parsed_table_) == "table" then
+      data = options._parsed_table_
+    else
+      local csvfile = SU.required(options, "csvfile", "piechart")
+      data = readCsvFile(csvfile)
+    end
+
     local column = SU.cast("integer", options.column or 2)
     if column < 2 then
       SU.error("Invalid column number for piechart")
@@ -250,6 +257,16 @@ function package:registerCommands ()
       end
     })
   end, "Draw a piechart")
+
+end
+
+function package:registerRawHandlers ()
+
+  self.class:registerRawHandler("piechart", function(options, content)
+    local csvdata = SU.contentToString(content):gsub("^%s", ""):gsub("%s$", "")
+    options._parsed_table_ = readCsvString(csvdata)
+    SILE.call("piechart", options)
+  end)
 
 end
 
