@@ -15,6 +15,16 @@
 \piechart[csvfile=examples/data-pie.csv, column=4, gradient=true]
 
 \piechart[csvfile=examples/data-pie.csv, column=5, percentage=true, decimals=1]
+
+\bigskip
+\begin[type=piechart]{raw}
+Candidate,Votes
+London,55
+Istambul,37
+Paris,16
+Oslo,43
+\end{raw}
+
 \end{center}
 
 \end{document}

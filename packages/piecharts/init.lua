@@ -3,6 +3,7 @@
 -- @copyright License: MIT (c) 2024 Omikhleia, Didier Willis
 --
 local readCsvFile = require("piecharts.csv").readCsvFile
+local readCsvString = require("piecharts.csv").readCsvString
 local hslToRgb = require("piecharts.color").hslToRgb
 local rgbToHsl = require("piecharts.color").rgbToHsl
 local pieSector = require("piecharts.drawing").pieSector
@@ -32,8 +33,14 @@ package._name = "piechart"
 function package:registerCommands ()
 
   self:registerCommand("piechart", function (options, _)
-    local csvfile = SU.required(options, "csvfile", "piechart")
-    local data = readCsvFile(csvfile)
+    local data
+    if options._parsed_table_ and type(options._parsed_table_) == "table" then
+      data = options._parsed_table_
+    else
+      local csvfile = SU.required(options, "csvfile", "piechart")
+      data = readCsvFile(csvfile)
+    end
+
     local column = SU.cast("integer", options.column or 2)
     if column < 2 then
       SU.error("Invalid column number for piechart")
@@ -253,9 +260,76 @@ function package:registerCommands ()
 
 end
 
+function package:registerRawHandlers ()
+
+  self.class:registerRawHandler("piechart", function(options, content)
+    local csvdata = SU.contentToString(content):gsub("^%s", ""):gsub("%s$", "")
+    options._parsed_table_ = readCsvString(csvdata)
+    SILE.call("piechart", options)
+  end)
+
+end
+
 package.documentation = [[
 \begin{document}
-Piechart package
+\use[module=packages.piecharts]
+The \autodoc:package{piecharts} package provides the \autodoc:command{\piechart[csvfile=<file>]} command, which takes a CSV file as input and draws a pie chart from it.
+
+The CSV data should have at least two columns, the first one being the labels and the second one the values.
+The first row of the CSV data is expected to contain the column names.
+Empty or null values are skipped, and negative values are not allowed.
+
+The \autodoc:parameter{column=<number>} option may be used to specify which column to use for the values, when there are more than two columns.
+When set, the \autodoc:parameter{cutoff=<number>} option specifies a cutoff value, expressed as a percentage of the total value, below which the values are grouped together and displayed as a single pie sector.
+
+\medskip
+\begin{center}
+\begin[type=piechart,gradient=true,height=6em]{raw}
+Player,Score
+Mario,55
+Luigi,23
+Peach,12
+Bowser,10
+\end{raw}
+\glue[width=1.5em plus 1em minus 1em]
+\begin[type=piechart,percentage=true,standout=true,cutoff=0.07,height=8em]{raw}
+Player,Votes
+Geralt,27
+Ciri,25
+Yennefer,23
+Triss,17
+Vesemir,15
+Lambert,9
+Eskel,7
+Philippa,3
+Bonhart,1
+\end{raw}
+\end{center}
+
+\smallskip
+Two parameters control the visual appearance of the pie chart:
+
+\begin{itemize}
+\item{The \autodoc:parameter{height=<measurement>} option (defaulting to 4em) allows to specify the height of the pie chart.
+
+Note that the width cannot be specified, as the labels on the right side of the pie chart will scaled to fit the available vertical space.}
+\item{The \autodoc:parameter{gradient=<boolean>} option (defaulting to false) allows to specify the type of color scheme to use.
+
+When set to false, each sector of the pie chart will be colored with a different shade of color. When set to true, a single color will be used, varying in intensity for each sector.}
+\end{itemize}
+
+The other options control the appearance of the labels and the legend:
+
+\begin{itemize}
+\item{The \autodoc:parameter{decimals=<number>} option (defaulting to 0) allows to specify the number of decimals to display for the values, when they are not integers.}
+\item{The \autodoc:parameter{standout=<boolean>} option (defaulting to false) allows to specify whether the first value should be highlighted, that is displayed as slightly extruded from the pie chart.}
+\item{The \autodoc:parameter{percentage=<boolean>} option (defaulting to false) allows to specify whether the values should be displayed as percentages.}
+\end{itemize}
+
+Including raw CSV content from within a document in SIL syntax is also possible,
+using a \code{raw} environment of type \code{piechart}.
+It is what is used in the examples above.
+
 \end{document}
 ]]
 
