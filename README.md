@@ -4,7 +4,7 @@
 [![Luacheck](https://img.shields.io/github/actions/workflow/status/Omikhleia/piecharts.sile/luacheck.yml?branch=main&label=Luacheck&logo=Lua)](https://github.com/Omikhleia/piecharts.sile/actions?workflow=Luacheck)
 [![Luarocks](https://img.shields.io/luarocks/v/Omikhleia/piecharts.sile?label=Luarocks&logo=Lua)](https://luarocks.org/modules/Omikhleia/piecharts.sile)
 
-This collection of packages for the [SILE](https://github.com/sile-typesetter/sile) typesetting system provides for the rendering of pie (donut) charts from in CSV format.
+This collection of packages for the [SILE](https://github.com/sile-typesetter/sile) typesetting system provides for the rendering of pie (donut) charts from data in CSV format.
 
 ![Example](./samplepies.png)
 
