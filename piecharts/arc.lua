@@ -1,20 +1,21 @@
---- Pie charts for the SILE typesetting system
---
--- @copyright License: MIT (c) 2024 Omikhleia, Didier Willis
---
+--- Approximate an ellipse arc with successive bezier curves.
+-- Based on L. Maisonobe, "Drawing an elliptical arc using polylines,
+-- quadratic orcubic Bezier curves", 2003, §3.4.1)
 
--- Based on L. Maisonobe solution for approximating ellipse arcs with bezier
--- curves.
--- (L. Maisonobe, "Drawing an elliptical arc using polylines, quadratic or
--- cubic Bezier curves", 2003, §3.4.1)
---
--- N.B. Angles are in radians
-local function arcBezierCurve (x, y, width, height, startAngle, arcAngle)
-  local a = width / 2
-  local b = height / 2
+--- @module piecharts.arc
+--- @copyright License: MIT (c) 2024 Omikhleia, Didier Willis
 
-  local cx = x -- + a
-  local cy = y -- + b
+--- Compute the control points of a Bezier curve approximating an ellipse arc.
+---@param x          number Position of the center of the ellipse on the x-axis
+---@param y          number Position of the center of the ellipse on the y-axis
+---@param a          number Semi-axis of the ellipse in the x-axis
+---@param b          number Semi-axis of the ellipse in the y-axis
+---@param startAngle number Start angle of the arc in radians
+---@param arcAngle   number Angle of the arc in radians
+---@return table     Bezier control points as a table of 8 numbers (start point, 2 control points, end point)
+local function _arcBezierCurve (x, y, a, b, startAngle, arcAngle)
+  local cx = x
+  local cy = y
   -- Trigonometric operations used later.
   local cos1 = math.cos(startAngle)
   local sin1 = math.sin(startAngle)
@@ -49,30 +50,38 @@ local function arcBezierCurve (x, y, width, height, startAngle, arcAngle)
   local q2x = p2x - alpha * d2x;
   local q2y = p2y - alpha * d2y;
 
-  return {p1x, p1y, q1x, q1y, q2x, q2y, p2x, p2y}
+  return { p1x, p1y, q1x, q1y, q2x, q2y, p2x, p2y }
 end
 
--- Approximation by successive bezier curves
--- N.B the angle step should be computed to minimize errors, instead of
--- hard-coding a value here...
+--- Maximum angle per curve
+-- N.B. the angle step should be computed to minimize errors, instead of
+-- hard-coding a 15 degrees value here...
 local maxAnglePerCurve = 15 * math.pi / 180
 
-local function arc (x, y, width, height, startAngle, arcAngle)
+--- Approximate an ellipse arc with successive bezier curves.
+---@param x          number Position of the center of the ellipse on the x-axis
+---@param y          number Position of the center of the ellipse on the y-axis
+---@param a          number Semi-axis of the ellipse in the x-axis
+---@param b          number Semi-axis of the ellipse in the y-axis
+---@param startAngle number Start angle of the arc in radians
+---@param arcAngle   number Angle of the arc in radians
+---@return table     List of curves (initial 2-point position, then 3-point curves)
+local function arcToBezierCurves (x, y, a, b, startAngle, arcAngle)
   local n = math.ceil(math.abs(arcAngle / maxAnglePerCurve))
   local actualArcAngle = arcAngle / n
   local currentStartAngle = startAngle
   local curves = {}
 
   for i = 1, n do
-    local bezier = arcBezierCurve(x, y, width, height, currentStartAngle, actualArcAngle)
+    local bezier = _arcBezierCurve(x, y, a, b, currentStartAngle, actualArcAngle)
     if i == 1 then
-      curves[#curves + 1] = {bezier[1], bezier[2]}
+      curves[#curves + 1] = { bezier[1], bezier[2] }
     end
-    curves[#curves + 1] = {bezier[3], bezier[4], bezier[5], bezier[6], bezier[7], bezier[8]}
+    curves[#curves + 1] = { bezier[3], bezier[4], bezier[5], bezier[6], bezier[7], bezier[8] }
     currentStartAngle = currentStartAngle + actualArcAngle;
   end
   -- curves[#curves+1] = { x, y } -- Nope, just the arc
   return curves
 end
 
-return arc
+return arcToBezierCurves

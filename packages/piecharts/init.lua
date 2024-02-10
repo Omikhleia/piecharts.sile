@@ -47,7 +47,8 @@ function package:registerCommands ()
     end
     local decimals = SU.cast("integer", options.decimals or 0)
     local standout = SU.boolean(options.standout or false)
-    local offsetRatio = 0.05 -- arbitrary, for "standout" top value
+    local offsetRatio = 0.05 -- (arbitrary) for "standout" top value
+    local pieInnerRatio = 0.6 -- (arbitrary) ratio of the inner circle to the outer circle
     local percentage = SU.boolean(options.percentage or false)
     local gradient = SU.boolean(options.gradient or false)
     local cutoff = SU.cast("number", options.cutoff or 0)
@@ -55,7 +56,7 @@ function package:registerCommands ()
 
     local pieDiameter = (standout and graphHeight * (1 - offsetRatio) or graphHeight)
     local pieDimen = graphHeight
-
+    local pieRadius = pieDiameter / 2
 
     -- Check, filter and sort data
     local fieldname = icu.case(data.fieldnames[column] or "total", SILE.settings:get("document.language"), "upper")
@@ -123,8 +124,6 @@ function package:registerCommands ()
       end
     end
 
-    local pieInnerRatio = 0.6 -- ratio of the inner circle to the outer circle
-
     -- Build inner content
     -- Internal portion of the piechart contains the total value and a legend
     -- We reserve space for the legend and the total value, with some padding
@@ -149,7 +148,7 @@ function package:registerCommands ()
       local angle = value / totalValue * 2 * math.pi
       local roff = standout and row == 1 and offsetRatio * pieDiameter or 0
       local midAngle = (start + angle/2)
-      local path = pieSector(roff * math.cos(midAngle), -roff*math.sin(midAngle), pieDiameter, start, angle, pieInnerRatio, {
+      local path = pieSector(roff * math.cos(midAngle), -roff*math.sin(midAngle), pieRadius, start, angle, pieInnerRatio, {
         fill = fillcolor,
         stroke = SILE.color("white"),
         strokeWidth = 0.4,
@@ -188,7 +187,7 @@ function package:registerCommands ()
     local totLabelHeight = labelBs * maxLabelHeight * #legends
     local labelFontRatio = SU.min(1, pieDiameter / totLabelHeight)
     local fontSz = SILE.settings:get("font.size")
-    local labelRadius = 0.5 * maxLabelHeight * labelFontRatio
+    local labelDiameter = 0.5 * maxLabelHeight * labelFontRatio
     local maxLabelWidth = 0
     for i, label in ipairs(legends) do
       -- reshape the label at the new font size, slighty smaller for better effect
@@ -196,16 +195,16 @@ function package:registerCommands ()
         label = SILE.typesetter:makeHbox({ label })
       end)
       local fillcolor = colorFn(H, S, L, i)
-      local dot = circle(0, 0, labelRadius, {
+      local dot = circle(0, 0, labelDiameter / 2, {
         fill = fillcolor,
-       stroke = "none",
+        stroke = "none",
       })
       maxLabelWidth = SU.max(maxLabelWidth, label.width:tonumber())
       legends[i] = { label = label, dot = dot }
     end
 
     --local pieWidth --= pieHeight -- FIXME
-    local graphWidth = pieDiameter  + 2 * labelRadius + maxLabelWidth + 0.05 * pieDimen
+    local graphWidth = pieDiameter  + 2 * labelDiameter + maxLabelWidth + 0.05 * pieDimen
 
     SILE.typesetter:pushHbox({
       width = SILE.length(graphWidth),
@@ -238,15 +237,15 @@ function package:registerCommands ()
         for i, legend in ipairs(legends) do
           local ipos = #legends - i
           -- small circle
-          local lx = legendX + labelRadius + 0.05 * pieDimen
+          local lx = legendX + labelDiameter + 0.05 * pieDimen
           local ly = legendY - ipos * maxLabelHeight * labelFontRatio * labelBs
           SILE.outputter:drawSVG(
             legend.dot,
             lx,
             ly,
-            labelRadius, labelRadius, 1
+            labelDiameter, labelDiameter, 1
           )
-          typesetter.frame.state.cursorX = lx + labelRadius
+          typesetter.frame.state.cursorX = lx + labelDiameter
           typesetter.frame.state.cursorY = ly - 0.25 * legend.label.height:absolute()
           legend.label:outputYourself(typesetter, line)
         end

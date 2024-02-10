@@ -81,14 +81,13 @@ end
 
 local pieSector = function (x, y, radius, startAngle, arcAngle, ratio, options)
   ratio = ratio or 0.6
+  -- outer arc
   local s1 = arcToBezierCurves(x, y, radius, radius, startAngle, arcAngle)
-
-  local s2 = arcToBezierCurves(x, y, ratio*radius, ratio*radius, startAngle + arcAngle, -arcAngle)
-  table.insert(s1, s2[1])
-  for i = 1, #s2 do
-    table.insert(s1, s2[i])
-  end
-  table.insert(s1, s2[#s2])
+  -- inner arc
+  local s2 = arcToBezierCurves(x, y, ratio * radius, ratio * radius, startAngle + arcAngle, -arcAngle)
+  table.insert(s1, s2[1]) -- line to the inner arc
+  pl.tablex.insertvalues(s1, s2)
+  table.insert(s1, s2[#s2]) -- line to the outer arc
   return draw({
     path = pdfPathHelper(s1[1][1], s1[1][2], s1),
     options = options,
@@ -98,7 +97,7 @@ end
 local circle = function (x, y, radius, options)
   local s1 = arcToBezierCurves(x, y, radius, radius, 0, 2 * math.pi)
   return draw({
-    path = pdfPathHelper(x, y, s1),
+    path = pdfPathHelper(s1[1][1], s1[1][2], s1),
     options = options,
   })
 end
