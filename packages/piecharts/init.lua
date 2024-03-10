@@ -28,7 +28,7 @@ local function scaleContent(content, maxwidth, maxheight)
 end
 
 local package = pl.class(base)
-package._name = "piechart"
+package._name = "piecharts"
 
 function package:registerCommands ()
 
