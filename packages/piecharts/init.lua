@@ -1,17 +1,16 @@
 --- Pie charts for the SILE typesetting system
 --
--- @copyright License: MIT (c) 2024 Omikhleia, Didier Willis
+-- @copyright License: MIT (c) 2024, 2025 Omikhleia, Didier Willis
 --
 require("silex.ast") -- Compatibility shims
 require("silex.types") -- Compatibility shims
 
 local readCsvFile = require("piecharts.csv").readCsvFile
 local readCsvString = require("piecharts.csv").readCsvString
-local hslToRgb = require("piecharts.color").hslToRgb
-local rgbToHsl = require("piecharts.color").rgbToHsl
-local pieSector = require("piecharts.drawing").pieSector
-local circle = require("piecharts.drawing").circle
 local icu = require("justenoughicu")
+
+local PathRenderer = require("grail.renderer")
+local Color = require("grail.color")
 
 local base = require("packages.base")
 
@@ -105,25 +104,25 @@ function package:registerCommands ()
     local colorFn
     local H, S, L
     if gradient then
-      local startcolor = SILE.types.color("#4cb252") -- nice greenish color
-      H, S, L = rgbToHsl(startcolor)
+      local startcolor = Color("#4cb252") -- nice greenish color
+      H, S, L = startcolor:toHsl()
       colorFn = function (h, s, l, index)
         if data[index].cut then
           return SILE.types.color("200")
         end
         local cscale = 0.6 * (1.0 - l) / #data
-        return hslToRgb(h, s, l + cscale * (index - 1))
+        return Color.fromHsl(h, s, l + cscale * (index - 1))
       end
     else
-      local startcolor = SILE.types.color("#b2524c") -- nice reddish color
-      H, S, L = rgbToHsl(startcolor)
+      local startcolor = Color("#b2524c") -- nice reddish color
+      H, S, L = startcolor:toHsl()
       colorFn = function (h, s, l, index)
         if data[index].cut then
           return SILE.types.color("200")
         end
         local cscale = 0.6 * (1.0 - l) / #data
         local hscale = 1 / #data
-        return hslToRgb(h + hscale * (index - 1), s, l + cscale * (index - 1))
+        return Color.fromHsl(h + hscale * (index - 1), s, l + cscale * (index - 1))
       end
     end
 
@@ -141,6 +140,8 @@ function package:registerCommands ()
     end
     local innerTopBox = scaleContent({ tostring(totalString) }, maxTextSz, 0.7 * maxTextSz)
 
+    local graphics = PathRenderer()
+
     -- Build piechart sectors
     local start = math.pi / 7 -- arbitrary start angle
     local paths = {}
@@ -151,7 +152,7 @@ function package:registerCommands ()
       local angle = value / totalValue * 2 * math.pi
       local roff = standout and row == 1 and offsetRatio * pieDiameter or 0
       local midAngle = (start + angle/2)
-      local path = pieSector(roff * math.cos(midAngle), -roff*math.sin(midAngle), pieRadius, start, angle, pieInnerRatio, {
+      local path = graphics:pieSector(roff * math.cos(midAngle), -roff*math.sin(midAngle), pieRadius, start, angle, pieInnerRatio, {
         fill = fillcolor,
         stroke = SILE.types.color("white"),
         strokeWidth = 0.4,
@@ -198,7 +199,7 @@ function package:registerCommands ()
         label = SILE.typesetter:makeHbox({ label })
       end)
       local fillcolor = colorFn(H, S, L, i)
-      local dot = circle(0, 0, labelDiameter / 2, {
+      local dot = graphics:circle(0, 0, labelDiameter, {
         fill = fillcolor,
         stroke = "none",
       })
