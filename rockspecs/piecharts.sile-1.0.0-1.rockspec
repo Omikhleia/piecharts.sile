@@ -1,7 +1,9 @@
+rockspec_format = "3.0"
 package = "piecharts.sile"
-version = "dev-1"
+version = "1.0.0-1"
 source = {
   url = "git+https://github.com/Omikhleia/piecharts.sile.git",
+  tag = "v1.0.0",
 }
 description = {
   summary = "Pie charts for the SILE typesetting system.",
@@ -14,7 +16,7 @@ description = {
 }
 dependencies = {
   "lua >= 5.1",
-  "silex.sile",
+  "silex.sile >= 0.6.0, < 1.0",
   "grail"
 }
 build = {
