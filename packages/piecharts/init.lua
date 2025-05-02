@@ -23,8 +23,11 @@ local icu = require("justenoughicu")
 local PathRenderer = require("grail.renderer")
 local Color = require("grail.color")
 
-local base = require("packages.base")
-
+--- Scale the content to fit within the specified maximum width and height and return it as an hbox.
+-- @tparam table content The content to be scaled.
+-- @tparam number maxwidth The maximum width for the content in points.
+-- @tparam number maxheight The maximum height for the content in points.
+-- @treturn hbox The scaled content typeset as an hbox node.
 local function scaleContent(content, maxwidth, maxheight)
   local fontTargetSize
   local box
@@ -39,6 +42,27 @@ local function scaleContent(content, maxwidth, maxheight)
   end)
   return box
 end
+
+--- Format a number to a language-specific string representation.
+-- For instance, in English, 1234.56 becomes "1,234.56", while in French, it becomes "1 234,56".
+-- @tparam number number The number to format.
+-- @tparam number decimals The number of decimal places to include if the number is not an integer.
+-- @treturn string The formatted number as a language-dependent string.
+local function formatLocalNumber (number, decimals)
+  local fmt = (number % 1 == 0 and "%d" or "%." .. decimals .. "f")
+  local s = string.format(fmt, number)
+  -- NOTE: SU.formatNumber() delegates to the ICU library, but SILE's C wrapper converts
+  -- the input to a double and uses ICU unum_formatDouble() to format it.
+  -- This might not be robust in all cases, due to floating point precision.
+  -- Well, here it should be ok in our case, but we should perhaps remember and report to SILE:
+  -- Maybe it should use ICU's unum_formatDecimal() which takes a "numeric string" as input,
+  -- following the Decimal Arithmetic Specification...
+  return SU.formatNumber(s, { style = "decimal" })
+end
+
+local nnsp = luautf8.char(0x2009) -- narrow no-break space
+
+local base = require("packages.base")
 
 local package = pl.class(base)
 package._name = "piecharts"
@@ -143,13 +167,8 @@ function package:registerCommands ()
     local maxTextSz = 0.70710678 -- sqrt(2)/2 (for 45°)
        * 0.95 * pieInnerRatio * pieDiameter
     local innerBottomBox = scaleContent({ fieldname }, 0.8 * maxTextSz, 0.3 * maxTextSz)
-    local totalString
-    if totalValue % 1 == 0 then
-      totalString = string.format("%d", totalValue)
-    else
-      totalString = string.format("%." .. decimals .. "f", totalValue)
-    end
-    local innerTopBox = scaleContent({ tostring(totalString) }, maxTextSz, 0.7 * maxTextSz)
+    local totalString = formatLocalNumber(totalValue, decimals)
+    local innerTopBox = scaleContent({ totalString }, maxTextSz, 0.7 * maxTextSz)
 
     local graphics = PathRenderer()
 
@@ -179,19 +198,10 @@ function package:registerCommands ()
     for _, entry in ipairs(data) do
       local value = tonumber(entry[column]) or 0
       if percentage then
-        local nnsp = luautf8.char(0x202f)
         local vp = value / totalValue * 100
-        if vp % 1 == 0 then
-          value = string.format("%d", vp) .. nnsp .. "%"
-        else
-          value = string.format("%." .. decimals .. "f", vp) .. nnsp .. "%"
-        end
+        value = formatLocalNumber(vp, decimals) .. nnsp .. "%"
       else
-        if value % 1 == 0 then
-          value = string.format("%d", value)
-        else
-          value = string.format("%." .. decimals .. "f", value)
-        end
+        value = formatLocalNumber(value, decimals)
       end
       legends[#legends+1] = entry[1] .. " (" .. value .. ")"
       local shaped = SILE.typesetter:makeHbox({ legends[#legends] })
