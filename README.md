@@ -10,7 +10,7 @@ This collection of packages for the [SILE](https://github.com/sile-typesetter/si
 
 ## Installation
 
-This module requires SILE v0.14.16 or upper.
+This module requires SILE v0.15.12.
 
 Installation relies on the **luarocks** package manager.
 
@@ -27,10 +27,8 @@ luarocks install piecharts.sile
 Examples are provided in the [examples](./examples) folder.
 
 The in-code package documentation may also be useful.
-A readable version of the documentation is included in the User Manual for
-the [resilient.sile](https://github.com/Omikhleia/resilient.sile) collection
-of classes and packages.
+A readable version of the documentation is included in the User Manual for the [resilient.sile](https://github.com/Omikhleia/resilient.sile) collection of classes and packages.
 
 ## License
 
-The code in this repository is released under the MIT License, Copyright 2024, Omikhleia.
+The code and samples in this repository are released under the GNU General Public License v3.0, (c) 2024-2025 Omikhleia.

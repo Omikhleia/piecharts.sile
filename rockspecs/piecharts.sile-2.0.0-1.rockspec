@@ -1,7 +1,9 @@
+rockspec_format = "3.0"
 package = "piecharts.sile"
-version = "dev-1"
+version = "2.0.0-1"
 source = {
   url = "git+https://github.com/Omikhleia/piecharts.sile.git",
+  tag = "v2.0.0",
 }
 description = {
   summary = "Pie charts for the SILE typesetting system.",

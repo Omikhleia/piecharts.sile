@@ -1,10 +1,21 @@
 --- Pie charts for the SILE typesetting system
 --
--- @copyright License: MIT (c) 2024, 2025 Omikhleia, Didier Willis
+-- License: GPL-3.0-or-later
 --
-require("silex.ast") -- Compatibility shims
-require("silex.types") -- Compatibility shims
-
+-- Copyright (C) 2022-2024, 2025 Didier Willis
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--
 local readCsvFile = require("piecharts.csv").readCsvFile
 local readCsvString = require("piecharts.csv").readCsvString
 local icu = require("justenoughicu")
@@ -265,7 +276,7 @@ end
 
 function package:registerRawHandlers ()
 
-  self.class:registerRawHandler("piechart", function(options, content)
+  self:registerRawHandler("piechart", function(options, content)
     local csvdata = SU.ast.contentToString(content):gsub("^%s", ""):gsub("%s$", "")
     options._parsed_table_ = readCsvString(csvdata)
     SILE.call("piechart", options)
