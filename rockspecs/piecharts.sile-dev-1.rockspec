@@ -10,7 +10,7 @@ description = {
     and rendering pie (donut) charts from them.
   ]],
   homepage = "https://github.com/Omikhleia/piecharts.sile",
-  license = "GPL-3.0",
+  license = "MIT",
 }
 dependencies = {
   "lua >= 5.1",
